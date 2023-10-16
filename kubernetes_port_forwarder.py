@@ -1,6 +1,7 @@
+import os
 import sys
+import json
 import subprocess
-from PyQt5.QtGui import QTextCursor, QTextCharFormat, QColor
 from PyQt5.QtCore import QProcess
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton, QVBoxLayout, QWidget, QComboBox, QLineEdit, QLabel, QTextBrowser
 
@@ -8,11 +9,23 @@ class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.services = {}
-
+        self.config_path = os.path.expanduser("~/.config/kubernetes_port_forwarder/config.json")
+        self.services = self.load_config()
         self.shutdown_received = False
+        self.debug = False
 
         self.init_ui()
+
+    def load_config(self):
+        default_services = {}
+
+        if os.path.exists(self.config_path):
+            with open(self.config_path, 'r') as file:
+                config = json.load(file)
+        else:
+            config = default_services
+
+        return config
 
     def init_ui(self):
         self.setWindowTitle('Kubernetes Port Forwarder')
