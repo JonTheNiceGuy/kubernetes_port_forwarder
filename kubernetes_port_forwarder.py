@@ -169,6 +169,7 @@ class MyApp(QMainWindow):
                         context_names.append(parts[0])
 
             context_names = list(set(context_names))
+            context_names.sort()
 
             index = 0
             active_item = 0
