@@ -3,7 +3,7 @@ import sys
 import json
 import subprocess
 from PyQt5.QtCore import QProcess
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QPushButton, QVBoxLayout, QWidget, QComboBox, QLineEdit, QLabel, QTextBrowser
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QComboBox, QLineEdit, QLabel, QTextBrowser, QHBoxLayout
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -30,38 +30,43 @@ class MyApp(QMainWindow):
     def init_ui(self):
         self.setWindowTitle('Kubernetes Port Forwarder')
 
-        # Create widgets
-        self.output_text = QTextBrowser(self)
-        self.output_text.setOpenExternalLinks(True)
-        self.output_text.setReadOnly(True)
-        self.label1 = QLabel("Context", self)
+        self.context_label = QLabel("Context", self)
         self.context_combobox = QComboBox(self)
         self.update_context_combobox()
-        self.label2 = QLabel("Service", self)
+
+        self.service_label = QLabel("Service", self)
         self.service_combobox = QComboBox(self)
         for service in self.services.keys():
             self.service_combobox.addItems([service])
-        self.label3 = QLabel("Bound IP", self)
+
+        self.bound_ip_label = QLabel("Bound IP", self)
         self.bind_address = QLineEdit(self)
         self.bind_address.setText("127.0.0.1")
-        self.label4 = QLabel("State", self)
+
+        self.state_label = QLabel("State", self)
         self.connect_button = QPushButton("Connect", self)
         self.connect_button.clicked.connect(self.toggle_connection)
 
-        # Layout
-        layout = QVBoxLayout()
-        layout.addWidget(self.label1)
+        self.output_text = QTextBrowser(self)
+        self.output_text.setOpenExternalLinks(True)
+        self.output_text.setReadOnly(True)
+
+        layout = QHBoxLayout()
+        layout.addWidget(self.context_label)
         layout.addWidget(self.context_combobox)
-        layout.addWidget(self.label2)
+        layout.addWidget(self.service_label)
         layout.addWidget(self.service_combobox)
-        layout.addWidget(self.label3)
+        layout.addWidget(self.bound_ip_label)
         layout.addWidget(self.bind_address)
-        layout.addWidget(self.label4)
+        layout.addWidget(self.state_label)
         layout.addWidget(self.connect_button)
-        layout.addWidget(self.output_text)
+
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(layout)
+        main_layout.addWidget(self.output_text)
 
         central_widget = QWidget()
-        central_widget.setLayout(layout)
+        central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
         self.process = None
