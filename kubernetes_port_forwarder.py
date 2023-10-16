@@ -81,7 +81,7 @@ class MyApp(QMainWindow):
             self.process.readyReadStandardOutput.connect(self.handle_stdout_and_stderr)
             self.process.readyReadStandardError.connect(self.handle_stdout_and_stderr)
             self.process.finished.connect(self.restart_process)
-            
+
             service = self.services[self.service_combobox.currentText()]
 
             command = f"kubectl port-forward "
@@ -106,19 +106,19 @@ class MyApp(QMainWindow):
         else:
             # Stop the shell command
             self.connected = False
-            self.log_output("Killing process", 'black')
+            self.log_debug_output("Killing process")
             self.process.kill()
-            self.log_output("Waiting for process to die", 'black')
+            self.log_debug_output("Waiting for process to die")
             self.process.waitForFinished()
-            self.log_output("Process Dead", 'black')
+            self.log_output("Process stopped")
             self.connect_button.setText("Connect")
 
     def restart_process(self, exitCode, exitStatus):
         if self.connected and not self.shutdown_received:
-            # If the process terminated and we are still connected, restart it
-            self.log_output("Restart process received", 'black')
-            self.log_output(f"Previous RC {str(exitCode)}", 'black')
-            self.log_output(f"Previous Message {str(exitStatus)}", 'black')
+            # If the process terminated and we are still connected and not shutting down, restart it
+            self.log_output("Restart process required")
+            self.log_debug_output(f"Previous RC {str(exitCode)}")
+            self.log_debug_output(f"Previous Message {str(exitStatus)}")
             self.connected = False
             self.toggle_connection()
 
@@ -132,12 +132,16 @@ class MyApp(QMainWindow):
             if data_stderr:
                 self.log_output(data_stderr, "red")
 
+    def log_debug_output(self, message):
+        if self.debug:
+            self.log_output(message, color='black')
+
     def log_output(self, message, color = 'black'):
         if type(message) != str:
             output = str(message, encoding="utf-8")
         else:
             output = message
-        
+
         if color == "green":
             output = f'<span style="color: green;">{output}</span>'
         elif color == "red":
@@ -149,12 +153,11 @@ class MyApp(QMainWindow):
 
     def update_context_combobox(self):
         try:
-            # Run 'kubectl config get-contexts --no-headers' and capture its output
+            # Get the current list of contexts
             output = subprocess.check_output(['kubectl', 'config', 'get-contexts', '--no-headers'], universal_newlines=True)
-            
             context_names = []
 
-            # Split the output by lines and extract the first column (context names)
+            # Get the context names (either first column or second column if context is active)
             for line in output.split('\n'):
                 line = line.strip()
                 if line:
@@ -164,7 +167,7 @@ class MyApp(QMainWindow):
                         active_context = parts[1]
                     else:
                         context_names.append(parts[0])
-                    
+
             context_names = list(set(context_names))
 
             index = 0
