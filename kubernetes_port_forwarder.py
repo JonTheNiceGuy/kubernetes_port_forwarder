@@ -86,15 +86,20 @@ class MyApp(QMainWindow):
 
             command = f"kubectl port-forward "
             command+= f"--context {self.context_combobox.currentText()} "
+            windowTitle = self.context_combobox.currentText()
             if 'namespace' in service:
                 command+= f"--namespace {service['namespace']} "
+                windowTitle+= f":{service['namespace']}"
             if 'kind' in service:
                 command+= f"{service['kind']}/"
             if 'object' in service:
                 command+= f"{service['object']} "
+                windowTitle+= f":{service['object']}"
             else:
                 command+= f"{self.service_combobox.currentText()} "
+                windowTitle+= f":{self.service_combobox.currentText()}"
             command+= f"--address {self.bind_address.text()} {service['port']}"
+            windowTitle+= f":{service['port']}"
             if 'serviceport' in service:
                 command+= f":{service['serviceport']}"
 
@@ -102,6 +107,7 @@ class MyApp(QMainWindow):
             self.process.start(command)
 
             self.connected = True
+            self.setWindowTitle(f'{windowTitle} Kubernetes Port Forwarder')
             self.connect_button.setText("Disconnect")
         else:
             # Stop the shell command
@@ -111,6 +117,7 @@ class MyApp(QMainWindow):
             self.log_debug_output("Waiting for process to die")
             self.process.waitForFinished()
             self.log_output("Process stopped")
+            self.setWindowTitle('Kubernetes Port Forwarder')
             self.connect_button.setText("Connect")
 
     def restart_process(self, exitCode, exitStatus):
