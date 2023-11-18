@@ -104,6 +104,9 @@ class MyApp(QMainWindow):
                 command+= f":{service['serviceport']}"
 
             self.log_output("Starting process", 'black')
+            self.log_output(f"Access service using nip.io via <a href='https://{self.service_combobox.currentText()}.{self.context_combobox.currentText()}.{self.bind_address.text()}.nip.io:{service['port']}'>HTTPS</a>, <a href='http://{self.service_combobox.currentText()}.{self.context_combobox.currentText()}.{self.bind_address.text()}.nip.io:{service['port']}'>HTTP</a>.")
+            self.log_output(f"Access service using IP Only via <a href='https://{self.bind_address.text()}:{service['port']}'>HTTPS</a>, <a href='http://{self.bind_address.text()}:{service['port']}'>HTTP</a>.")
+            self.log_output(f"Connect to {self.bind_address.text()}:{service['port']}")
             self.process.start(command)
 
             self.connected = True
