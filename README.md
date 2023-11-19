@@ -29,4 +29,4 @@ to fix any issues you want to see resolved.
 
 This application isn't considered to be secure or even production ready.
 However, if you find an issue which warrants an urgent response, please do
-[contact me directly](mailto:jon@sprig.gs?subject=Kubernetes%20Port%20Forwarder%20-%20Security%20issue%identified).
+[contact me directly](mailto:jon@sprig.gs?subject=Kubernetes%20Port%20Forwarder%20-%20Security%20issue%20identified).
