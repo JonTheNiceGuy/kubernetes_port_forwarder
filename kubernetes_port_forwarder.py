@@ -3,33 +3,27 @@ import sys
 import json
 import subprocess
 from PyQt5.QtCore import QProcess
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QComboBox, QLineEdit, QLabel, QTextBrowser, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QComboBox, QLineEdit, QLabel, QTextBrowser, QHBoxLayout, QAction, QTabWidget
 
-class MyApp(QMainWindow):
-    def __init__(self):
-        super().__init__()
 
-        self.config_path = os.path.expanduser("~/.config/kubernetes_port_forwarder/config.json")
-        self.services = self.load_config()
+class ForwarderTab(QWidget):
+    def __init__(self, parent, services):
+        super().__init__(parent)
+        self.services = services
+        self.connected = False
+        self.process = None
         self.shutdown_received = False
         self.debug = False
 
         self.init_ui()
 
-    def load_config(self):
-        default_services = {}
+    def set_index(self, tab_index: int):
+        self.my_tab_index = tab_index
 
-        if os.path.exists(self.config_path):
-            with open(self.config_path, 'r') as file:
-                config = json.load(file)
-        else:
-            config = default_services
-
-        return config
+    def set_widget(self, widget: QTabWidget):
+        self.my_tab_parent = widget
 
     def init_ui(self):
-        self.setWindowTitle('Kubernetes Port Forwarder')
-
         self.context_label = QLabel("Context", self)
         self.context_combobox = QComboBox(self)
         self.update_context_combobox()
@@ -65,12 +59,10 @@ class MyApp(QMainWindow):
         main_layout.addLayout(layout)
         main_layout.addWidget(self.output_text)
 
-        central_widget = QWidget()
-        central_widget.setLayout(main_layout)
-        self.setCentralWidget(central_widget)
+        self.setLayout(main_layout)
 
-        self.process = None
-        self.connected = False
+    def set_tab_title(self, title: str):
+        self.my_tab_parent.setTabText(self.my_tab_index, title)
 
     def toggle_connection(self):
         if not self.connected and not self.shutdown_received:
@@ -78,39 +70,44 @@ class MyApp(QMainWindow):
             self.process = QProcess()
 
             # Connect the process's signals
-            self.process.readyReadStandardOutput.connect(self.handle_stdout_and_stderr)
-            self.process.readyReadStandardError.connect(self.handle_stdout_and_stderr)
+            self.process.readyReadStandardOutput.connect(
+                self.handle_stdout_and_stderr)
+            self.process.readyReadStandardError.connect(
+                self.handle_stdout_and_stderr)
             self.process.finished.connect(self.restart_process)
 
             service = self.services[self.service_combobox.currentText()]
 
             command = f"kubectl port-forward "
-            command+= f"--context {self.context_combobox.currentText()} "
+            command += f"--context {self.context_combobox.currentText()} "
             windowTitle = self.context_combobox.currentText()
             if 'namespace' in service:
-                command+= f"--namespace {service['namespace']} "
-                windowTitle+= f":{service['namespace']}"
+                command += f"--namespace {service['namespace']} "
+                windowTitle += f":{service['namespace']}"
             if 'kind' in service:
-                command+= f"{service['kind']}/"
+                command += f"{service['kind']}/"
             if 'object' in service:
-                command+= f"{service['object']} "
-                windowTitle+= f":{service['object']}"
+                command += f"{service['object']} "
+                windowTitle += f":{service['object']}"
             else:
-                command+= f"{self.service_combobox.currentText()} "
-                windowTitle+= f":{self.service_combobox.currentText()}"
-            command+= f"--address {self.bind_address.text()} {service['port']}"
-            windowTitle+= f":{service['port']}"
+                command += f"{self.service_combobox.currentText()} "
+                windowTitle += f":{self.service_combobox.currentText()}"
+            command += f"--address {self.bind_address.text()} {service['port']}"
+            windowTitle += f":{service['port']}"
             if 'serviceport' in service:
-                command+= f":{service['serviceport']}"
+                command += f":{service['serviceport']}"
 
             self.log_output("Starting process", 'black')
-            self.log_output(f"Access service using nip.io via <a href='https://{self.service_combobox.currentText()}.{self.context_combobox.currentText()}.{self.bind_address.text()}.nip.io:{service['port']}'>HTTPS</a>, <a href='http://{self.service_combobox.currentText()}.{self.context_combobox.currentText()}.{self.bind_address.text()}.nip.io:{service['port']}'>HTTP</a>.")
-            self.log_output(f"Access service using IP Only via <a href='https://{self.bind_address.text()}:{service['port']}'>HTTPS</a>, <a href='http://{self.bind_address.text()}:{service['port']}'>HTTP</a>.")
-            self.log_output(f"Connect to {self.bind_address.text()}:{service['port']}")
+            self.log_output(
+                f"Access service using nip.io via <a href='https://{self.service_combobox.currentText()}.{self.context_combobox.currentText()}.{self.bind_address.text()}.nip.io:{service['port']}'>HTTPS</a>, <a href='http://{self.service_combobox.currentText()}.{self.context_combobox.currentText()}.{self.bind_address.text()}.nip.io:{service['port']}'>HTTP</a>.")
+            self.log_output(
+                f"Access service using IP Only via <a href='https://{self.bind_address.text()}:{service['port']}'>HTTPS</a>, <a href='http://{self.bind_address.text()}:{service['port']}'>HTTP</a>.")
+            self.log_output(
+                f"Connect to {self.bind_address.text()}:{service['port']}")
             self.process.start(command)
 
             self.connected = True
-            self.setWindowTitle(f'{windowTitle} Kubernetes Port Forwarder')
+            self.set_tab_title(windowTitle)
             self.connect_button.setText("Disconnect")
         else:
             # Stop the shell command
@@ -120,7 +117,7 @@ class MyApp(QMainWindow):
             self.log_debug_output("Waiting for process to die")
             self.process.waitForFinished()
             self.log_output("Process stopped")
-            self.setWindowTitle('Kubernetes Port Forwarder')
+            self.set_tab_title("Available Forwarder")
             self.connect_button.setText("Connect")
 
     def restart_process(self, exitCode, exitStatus):
@@ -146,7 +143,7 @@ class MyApp(QMainWindow):
         if self.debug:
             self.log_output(message, color='black')
 
-    def log_output(self, message, color = 'black'):
+    def log_output(self, message, color='black'):
         if type(message) != str:
             output = str(message, encoding="utf-8")
         else:
@@ -164,7 +161,8 @@ class MyApp(QMainWindow):
     def update_context_combobox(self):
         try:
             # Get the current list of contexts
-            output = subprocess.check_output(['kubectl', 'config', 'get-contexts', '--no-headers'], universal_newlines=True)
+            output = subprocess.check_output(
+                ['kubectl', 'config', 'get-contexts', '--no-headers'], universal_newlines=True)
             context_names = []
 
             # Get the context names (either first column or second column if context is active)
@@ -186,8 +184,8 @@ class MyApp(QMainWindow):
             for item in context_names:
                 if item == active_context:
                     active_item = index
-                index+=1
-            
+                index += 1
+
             self.context_combobox.clear()
             self.context_combobox.addItems(context_names)
             self.context_combobox.setCurrentIndex(active_item)
@@ -205,6 +203,57 @@ class MyApp(QMainWindow):
             self.process.close()  # Close the process to release resources
             self.process.deleteLater()  # Ensure that the process is properly destroyed
         event.accept()
+
+
+class MyApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.config_path = os.path.expanduser(
+            "~/.config/kubernetes_port_forwarder/config.json")
+        self.services = self.load_config()
+        self.shutdown_received = False
+        self.debug = False
+
+        self.init_ui()
+
+    def load_config(self):
+        default_services = {}
+
+        if os.path.exists(self.config_path):
+            with open(self.config_path, 'r') as file:
+                config = json.load(file)
+        else:
+            config = default_services
+
+        return config
+
+    def init_ui(self):
+        self.setWindowTitle('Kubernetes Port Forwarder')
+
+        # Create a menu bar
+        menu_bar = self.menuBar()
+        file_menu = menu_bar.addMenu('File')
+
+        # Add an action to create a new forwarder tab
+        new_forwarder_action = QAction('New Forwarder', self)
+        new_forwarder_action.triggered.connect(self.create_forwarder_tab)
+        file_menu.addAction(new_forwarder_action)
+
+        # Create a tab widget to hold forwarder tabs
+        self.tab_widget = QTabWidget(self)
+        self.setCentralWidget(self.tab_widget)
+
+        # Create the initial forwarder tab
+        self.create_forwarder_tab()
+
+    def create_forwarder_tab(self):
+        tab = ForwarderTab(self, self.services)
+        index = self.tab_widget.addTab(tab, "Available Forwarder")
+        tab.set_index(index)
+        tab.set_widget(self.tab_widget)
+        self.tab_widget.setCurrentIndex(index)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
