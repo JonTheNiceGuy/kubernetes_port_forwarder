@@ -1,0 +1,20 @@
+{
+    "kubecost": {
+        "namespace": "kubecost",
+        "port": "9090",
+        "kind": "deployment",
+        "object": "kubecost-cost-analyser"
+    },
+    "kubeshark-hub": {
+        "namespace": "kubeshark",
+        "port": "8898",
+        "serviceport": "80",
+        "kind": "service"
+    },
+    "kubeshark-front": {
+        "namespace": "kubeshark",
+        "port": "8899",
+        "serviceport": "80",
+        "kind": "service"
+    }
+}
