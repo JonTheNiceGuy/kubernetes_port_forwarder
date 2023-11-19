@@ -262,7 +262,7 @@ class MyApp(QMainWindow):
 
     def show_about_dialog(self):
         about_text = """
-        <h1>Kubernetes Port Forwarder</h1>
+        <h1>Kubernetes Port Forwarder - v1.0.0</h1>
         <table width="100%">
             <tr>
                 <td width="50%">
