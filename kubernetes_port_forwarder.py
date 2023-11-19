@@ -1,9 +1,10 @@
+#!/usr/bin/env python3
 import os
 import sys
 import json
 import subprocess
-from PyQt5.QtCore import QProcess
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QComboBox, QLineEdit, QLabel, QTextBrowser, QHBoxLayout, QAction, QTabWidget
+from PyQt5.QtCore import QProcess, Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QComboBox, QLineEdit, QLabel, QTextBrowser, QHBoxLayout, QAction, QTabWidget, QMessageBox
 
 
 class ForwarderTab(QWidget):
@@ -240,6 +241,11 @@ class MyApp(QMainWindow):
         new_forwarder_action.triggered.connect(self.create_forwarder_tab)
         file_menu.addAction(new_forwarder_action)
 
+        # Add an action for the "About" menu item
+        about_action = QAction('About', self)
+        about_action.triggered.connect(self.show_about_dialog)
+        file_menu.addAction(about_action)
+
         # Create a tab widget to hold forwarder tabs
         self.tab_widget = QTabWidget(self)
         self.setCentralWidget(self.tab_widget)
@@ -253,6 +259,52 @@ class MyApp(QMainWindow):
         tab.set_index(index)
         tab.set_widget(self.tab_widget)
         self.tab_widget.setCurrentIndex(index)
+
+    def show_about_dialog(self):
+        about_text = """
+        <h1>Kubernetes Port Forwarder</h1>
+        <table width="100%">
+            <tr>
+                <td width="50%">
+                    <a href="https://github.com/JonTheNiceGuy/kubernetes_port_forwarder/">Github</a>
+                </td>
+                <td width="50%">
+                    <a href="https://jon.sprig.gs">Author: Jon Spriggs</a>
+                </td>
+            </tr>
+        </table>
+        <div>
+            <code>
+                <h2>MIT License</h2>
+
+                <div><b>Copyright (c) 2023 Jon "The Nice Guy" Spriggs</b></div>
+                <br>
+                <div>Permission is hereby granted, free of charge, to any person obtaining a copy
+                of this software and associated documentation files (the "Software"), to deal
+                in the Software without restriction, including without limitation the rights
+                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+                copies of the Software, and to permit persons to whom the Software is
+                furnished to do so, subject to the following conditions:</div>
+                <br>
+                <div>The above copyright notice and this permission notice shall be included in all
+                copies or substantial portions of the Software.</div>
+                <br>
+                <div>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+                IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+                FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+                AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+                LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+                OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+                SOFTWARE.</div>
+            </code>
+        </div>
+        """
+
+        about_dialog = QMessageBox(self)
+        about_dialog.setWindowTitle('About Kubernetes Port Forwarder')
+        about_dialog.setTextFormat(Qt.RichText)
+        about_dialog.setText(about_text)
+        about_dialog.exec_()
 
 
 if __name__ == '__main__':
